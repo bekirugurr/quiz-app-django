@@ -1,29 +1,28 @@
 from django.shortcuts import render
-from rest_framework.generics import ListAPIView
-from .models import Category, Quiz, Question, Answer
+from rest_framework.generics import ListAPIView, ListCreateAPIView
+from .models import Category, Quiz, Question
 from .serializers import CategorySerializer, QuizSerializer, QuestionSerializer, AnswerSerializer
+from .permissions import StafCUDAuthenticatedOnlyRead
 
-
-class CategoryListView(ListAPIView):
-
+class CategoryListView(ListCreateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = (StafCUDAuthenticatedOnlyRead,)
 
-
-class QuizListView(ListAPIView):
+class QuizListView(ListCreateAPIView):
     serializer_class = QuizSerializer
+    permission_classes = (StafCUDAuthenticatedOnlyRead,)
 
     def get_queryset(self):
         category_name = self.kwargs['category']
-        cat_id = Category.objects.get(name=category_name).id
-        return Quiz.objects.filter(category_id = cat_id)
+        return Quiz.objects.filter(category__name__iexact = category_name)
 
-class QuestionListView(ListAPIView):
+class QuestionListView(ListCreateAPIView):
     serializer_class = QuestionSerializer
+    permission_classes = (StafCUDAuthenticatedOnlyRead,)
 
     def get_queryset(self):
         quiz_title = self.kwargs['title']
-        quiz_id = Quiz.objects.get(title=quiz_title).id
-        return Question.objects.filter(quiz_id=quiz_id)
+        return Question.objects.filter(quiz__title__iexact=quiz_title)
 
 
