@@ -5,4 +5,6 @@ urlpatterns = [
     path('', CategoryListView.as_view()),
     path('<category>/', QuizListView.as_view()),
     path('<category>/<title>/', QuestionListView.as_view()),
+    path('nested_admin/', include('nested_admin.urls')),
+
 ]
