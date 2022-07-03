@@ -72,8 +72,22 @@ class QuestionSerializer(serializers.ModelSerializer):
         instance.difficulty = validated_data.get('difficulty', instance.difficulty)
         instance.save()
 
-        answers = validated_data.get('answers')
-        for answer in answers:
+        answers_data = validated_data.get('answers')
+        
+        # Bu 10 satırlık if bloku PUT yapıldığında instance ta var olan answerlar request le gelen nested yapı içerisinde yoksa onları database den siliyor. PATCH yapıldığında silmiyor
+        if self.context['request'].method == 'PUT':
+            comming_ans_ids = []
+            for i in range(len(answers_data)):
+                if len(answers_data[i]) == 3:
+                    comming_ans_ids.append(dict(answers_data[i])['id'])
+            ans_ids_in_db = [ans.id for ans in Answer.objects.filter(question=instance)]
+            for ans_id in ans_ids_in_db:
+                if ans_id not in comming_ans_ids:
+                    ans = Answer.objects.get(id=ans_id)
+                    ans.delete()
+
+        # Üstteki if bloku bu for döngüsünün altında olursa for döngüsünün geçersiz kılıyor. O yüzden yer değişmemesi lazım
+        for answer in answers_data:
             answer_id = answer.get('id', None)
             if answer_id:
                 ans = Answer.objects.get(id=answer_id, question=instance)
