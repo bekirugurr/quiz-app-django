@@ -36,9 +36,10 @@ class QuizSerializer(serializers.ModelSerializer):
 
 
 class AnswerSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
     class Meta:
         model = Answer
-        fields = ('answer_text', 'is_right')
+        fields = ('id', 'answer_text', 'is_right')
 
 
 class QuestionSerializer(serializers.ModelSerializer):
@@ -64,3 +65,23 @@ class QuestionSerializer(serializers.ModelSerializer):
             question.answers.add(ans)
         question.save()
         return question
+
+
+    def update(self, instance, validated_data):
+        instance.title = validated_data.get('title', instance.title)
+        instance.difficulty = validated_data.get('difficulty', instance.difficulty)
+        instance.save()
+
+        answers = validated_data.get('answers')
+        for answer in answers:
+            answer_id = answer.get('id', None)
+            if answer_id:
+                ans = Answer.objects.get(id=answer_id, question=instance)
+                ans.answer_text = answer.get('answer_text', ans.answer_text)
+                ans.is_right = answer.get('is_right', ans.is_right)
+                ans.save()
+            else:
+                Answer.objects.create(question=instance, **answer)
+        return instance
+
+
